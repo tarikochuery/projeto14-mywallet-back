@@ -54,9 +54,11 @@ app.post('/cadastro', async (req, res) => {
     return res.status(422).send(errors);
   }
 
-  const isEmailInUse = !!(await db.collection('users').find({ email: signUpData.email }));
+  const isEmailInUse = !!(await db.collection('users').findOne({ email: signUpData.email }));
 
-  if (isEmailInUse) return res.sendStatus(409);
+  console.log(isEmailInUse);
+
+  if (isEmailInUse) return res.status(409).send('Email já cadastrado');
 
   const hashPassword = await bcrypt.hash(signUpData.password, saltRounds);
 
