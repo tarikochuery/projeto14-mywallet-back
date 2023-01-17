@@ -4,7 +4,7 @@ import cors from 'cors';
 import { MongoClient } from 'mongodb';
 import bcrypt from 'bcrypt';
 import Joi from 'joi';
-import { signUpSchema } from './utils/schemas.js';
+import { loginSchema, signUpSchema } from './utils/schemas.js';
 
 dotenv.config();
 const PORT = 5000;
@@ -24,6 +24,27 @@ try {
 
 db = mongoClient.db();
 
+app.post('/login', async (req, res) => {
+  const bodyData = req.body;
+  const { value: loginData, error } = loginSchema.validate(bodyData, { abortEarly: false });
+  if (error) {
+    const errors = error.details.map(detail => detail.message);
+    return res.status(422).send(errors);
+  }
+
+  const user = await db.collection('users').findOne({ email: loginData.email });
+
+  if (!user) return res.status(401).send('Email não cadastrado');
+
+  const match = await bcrypt.compare(loginData.password, user.password);
+
+  if (!match) {
+    return res.status(401).send('Senha incorreta');
+  }
+
+  return res.sendStatus(200);
+});
+
 app.post('/cadastro', async (req, res) => {
   const bodyData = req.body;
   const saltRounds = 10;
@@ -32,6 +53,10 @@ app.post('/cadastro', async (req, res) => {
     const errors = error.details.map(detail => detail.message);
     return res.status(422).send(errors);
   }
+
+  const isEmailInUse = !!(await db.collection('users').find({ email: signUpData.email }));
+
+  if (isEmailInUse) return res.sendStatus(409);
 
   const hashPassword = await bcrypt.hash(signUpData.password, saltRounds);
 
