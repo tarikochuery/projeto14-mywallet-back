@@ -72,5 +72,14 @@ app.post('/cadastro', async (req, res) => {
   res.sendStatus(201);
 });
 
+app.get('/transactions', async (req, res) => {
+  const token = req.headers.authorization;
+
+  const user = db.collection('users').findOne({ token });
+
+  if (!user) return res.sendStatus(403);
+
+  res.send(user.transactions);
+});
 
 app.listen(5000, () => console.log(`Servidor rodando na porta ${PORT}`));
