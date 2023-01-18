@@ -42,7 +42,7 @@ app.post('/login', async (req, res) => {
     return res.status(401).send('Senha incorreta');
   }
 
-  return res.sendStatus(200);
+  return res.send(user);
 });
 
 app.post('/cadastro', async (req, res) => {
@@ -56,8 +56,6 @@ app.post('/cadastro', async (req, res) => {
 
   const isEmailInUse = !!(await db.collection('users').findOne({ email: signUpData.email }));
 
-  console.log(isEmailInUse);
-
   if (isEmailInUse) return res.status(409).send('Email já cadastrado');
 
   const hashPassword = await bcrypt.hash(signUpData.password, saltRounds);
@@ -65,7 +63,8 @@ app.post('/cadastro', async (req, res) => {
   const user = {
     name: bodyData.name,
     email: bodyData.email,
-    password: hashPassword
+    password: hashPassword,
+    transactions: []
   };
 
   await db.collection('users').insertOne(user);
