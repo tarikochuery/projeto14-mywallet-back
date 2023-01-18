@@ -43,7 +43,10 @@ app.post('/login', async (req, res) => {
     return res.status(401).send('Senha incorreta');
   }
 
-  return res.send(user.token);
+  return res.send({
+    token: user.token,
+    name: user.name
+  });
 });
 
 app.post('/cadastro', async (req, res) => {
