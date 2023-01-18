@@ -42,11 +42,7 @@ app.post('/login', async (req, res) => {
     return res.status(401).send('Senha incorreta');
   }
 
-  return res.send({
-    name: user.name,
-    email: user.email,
-    transactions: user.transactions
-  });
+  return res.send(user.token);
 });
 
 app.post('/cadastro', async (req, res) => {
