@@ -3,7 +3,6 @@ import express, { json } from 'express';
 import cors from 'cors';
 import { MongoClient } from 'mongodb';
 import bcrypt from 'bcrypt';
-import Joi from 'joi';
 import { loginSchema, signUpSchema } from './utils/schemas.js';
 
 dotenv.config();
@@ -42,7 +41,11 @@ app.post('/login', async (req, res) => {
     return res.status(401).send('Senha incorreta');
   }
 
-  return res.send(user);
+  return res.send({
+    name: user.name,
+    email: user.email,
+    transactions: user.transactions
+  });
 });
 
 app.post('/cadastro', async (req, res) => {
