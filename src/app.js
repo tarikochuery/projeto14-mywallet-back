@@ -4,6 +4,7 @@ import cors from 'cors';
 import { MongoClient } from 'mongodb';
 import bcrypt from 'bcrypt';
 import { loginSchema, signUpSchema } from './utils/schemas.js';
+import { v4 as uuid } from 'uuid';
 
 dotenv.config();
 const PORT = 5000;
@@ -67,7 +68,8 @@ app.post('/cadastro', async (req, res) => {
     name: bodyData.name,
     email: bodyData.email,
     password: hashPassword,
-    transactions: []
+    transactions: [],
+    token: uuid()
   };
 
   await db.collection('users').insertOne(user);
