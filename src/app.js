@@ -3,8 +3,9 @@ import express, { json } from 'express';
 import cors from 'cors';
 import { MongoClient } from 'mongodb';
 import bcrypt from 'bcrypt';
-import { loginSchema, signUpSchema } from './utils/schemas.js';
+import { loginSchema, signUpSchema, transactionSchema } from './utils/schemas.js';
 import { v4 as uuid } from 'uuid';
+import dayjs from 'dayjs';
 
 dotenv.config();
 const PORT = 5000;
@@ -72,14 +73,42 @@ app.post('/cadastro', async (req, res) => {
   res.sendStatus(201);
 });
 
-app.get('/transactions', async (req, res) => {
+app.get('/transaction', async (req, res) => {
   const token = req.headers.authorization;
 
-  const user = db.collection('users').findOne({ token });
+  const user = await db.collection('users').findOne({ token });
 
   if (!user) return res.sendStatus(403);
 
   res.send(user.transactions);
+});
+
+app.post('/transaction', async (req, res) => {
+  const token = req.headers.authorization;
+  const bodyData = req.body;
+
+  const { value: transactionData, error } = transactionSchema.validate(bodyData, { abortEarly: false });
+
+  if (error) {
+    const errors = error.details.map(detail => detail.message);
+    return res.status(422).send(errors);
+  }
+
+  const user = await db.collection('users').findOne({ token });
+
+  if (!user) return res.sendStatus(403);
+
+  const newTransaction = { ...transactionData, date: dayjs().format('DD/MM') };
+
+  await db.collection('users').updateOne({
+    token
+  },
+    {
+      $set: { transactions: [...user.transactions, newTransaction] }
+    });
+
+  res.sendStatus(201);
+
 });
 
 app.listen(5000, () => console.log(`Servidor rodando na porta ${PORT}`));

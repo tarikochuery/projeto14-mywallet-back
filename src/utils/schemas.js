@@ -11,3 +11,9 @@ export const loginSchema = Joi.object({
   email: Joi.string().required().email({ tlds: { allow: false } }),
   password: Joi.string().required()
 });
+
+export const transactionSchema = Joi.object({
+  value: Joi.number().min(0).required(),
+  description: Joi.string().required(),
+  type: Joi.valid('income', 'outcome').required()
+});
