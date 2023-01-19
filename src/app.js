@@ -43,6 +43,15 @@ app.post('/login', async (req, res) => {
     return res.status(401).send('Senha incorreta');
   }
 
+  const token = uuid();
+
+  const sessionInfo = {
+    userId: user._id,
+    token
+  };
+
+  await db.collection('sessions').insertOne(sessionInfo);
+
   return res.send({
     token: user.token,
     name: user.name
@@ -65,11 +74,10 @@ app.post('/cadastro', async (req, res) => {
   const hashPassword = await bcrypt.hash(signUpData.password, saltRounds);
 
   const user = {
-    name: bodyData.name,
-    email: bodyData.email,
+    name: signUpData.name,
+    email: signUpData.email,
     password: hashPassword,
     transactions: [],
-    token: uuid()
   };
 
   await db.collection('users').insertOne(user);
