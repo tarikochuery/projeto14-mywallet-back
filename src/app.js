@@ -128,7 +128,7 @@ app.post('/transaction', async (req, res) => {
   const newTransaction = { ...transactionData, date: dayjs().format('DD/MM') };
 
   await db.collection('users').updateOne({
-    token
+    _id: session.userId
   },
     {
       $set: { transactions: [...user.transactions, newTransaction] }
