@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import express, { json } from 'express';
 import cors from 'cors';
-import { MongoClient } from 'mongodb';
+import { MongoClient, ObjectId } from 'mongodb';
 import bcrypt from 'bcrypt';
 import { loginSchema, signUpSchema, transactionSchema } from './utils/schemas.js';
 import { v4 as uuid } from 'uuid';
@@ -53,7 +53,7 @@ app.post('/login', async (req, res) => {
   await db.collection('sessions').insertOne(sessionInfo);
 
   return res.send({
-    token: user.token,
+    token,
     name: user.name
   });
 });
@@ -85,18 +85,34 @@ app.post('/cadastro', async (req, res) => {
 });
 
 app.get('/transaction', async (req, res) => {
-  const token = req.headers.authorization;
+  const authorizationInfo = req.headers.authorization;
 
-  const user = await db.collection('users').findOne({ token });
+  if (!authorizationInfo) return res.status(401).send('Informe o token de autorização');
 
-  if (!user) return res.sendStatus(403);
+  const token = authorizationInfo.replace('Bearer ', '');
+
+  const session = await db.collection('sessions').findOne({ token });
+
+  if (!session) return res.sendStatus(401);
+
+  const user = await db.collection('users').findOne({ _id: session.userId });
+
+  if (!user) return res.sendStatus(404);
 
   res.send(user.transactions);
 });
 
 app.post('/transaction', async (req, res) => {
-  const token = req.headers.authorization;
+  const authorizationInfo = req.headers.authorization;
   const bodyData = req.body;
+
+  if (!authorizationInfo) return res.status(401).send('Informe o token de autorização');
+
+  const token = authorizationInfo.replace('Bearer ', '');
+
+  const session = await db.collection('sessions').findOne({ token });
+
+  if (!session) return res.sendStatus(401);
 
   const { value: transactionData, error } = transactionSchema.validate(bodyData, { abortEarly: false });
 
@@ -105,9 +121,9 @@ app.post('/transaction', async (req, res) => {
     return res.status(422).send(errors);
   }
 
-  const user = await db.collection('users').findOne({ token });
+  const user = await db.collection('users').findOne({ _id: session.userId });
 
-  if (!user) return res.sendStatus(403);
+  if (!user) return res.sendStatus(401);
 
   const newTransaction = { ...transactionData, date: dayjs().format('DD/MM') };
 
