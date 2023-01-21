@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import db from "../config/db.js";
+import { v4 as uuid } from 'uuid';
 
 export const createTransaction = async (req, res) => {
   const transactionData = req.body;
@@ -10,7 +11,7 @@ export const createTransaction = async (req, res) => {
 
   if (!user) return res.sendStatus(401);
 
-  const newTransaction = { ...transactionData, date: dayjs().format('DD/MM') };
+  const newTransaction = { ...transactionData, date: dayjs().format('DD/MM'), id: uuid() };
 
   await db.collection('users').updateOne({
     _id: session.userId
