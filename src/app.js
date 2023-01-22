@@ -13,3 +13,5 @@ app.use([authRoute, transactionRoute]);
 
 
 app.listen(5000, () => console.log(`Servidor rodando na porta ${PORT}`));
+
+export default app;
